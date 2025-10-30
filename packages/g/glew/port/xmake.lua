@@ -5,6 +5,7 @@ if is_plat("linux") then
 end
 
 target("glew")
+    add_rules("utils.install.cmake_importfiles")
     set_kind("$(kind)")
     if is_plat("windows", "mingw") then
         set_basename(is_kind("shared") and "glew32" or "glew32s")
@@ -13,6 +14,7 @@ target("glew")
         add_frameworks("OpenGL")
     elseif is_plat("linux") then
         add_syslinks("GL")
+        add_packages("libx11", "xorgproto")
     end
     add_defines("GLEW_NO_GLU", {public = true})
     if is_plat("windows") then

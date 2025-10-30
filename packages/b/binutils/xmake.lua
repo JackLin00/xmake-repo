@@ -5,11 +5,13 @@ package("binutils")
     set_description("GNU binary tools for native development")
     set_license("GPL-2.0")
 
-    set_urls("https://ftp.gnu.org/gnu/binutils/binutils-$(version).tar.xz",
-             "https://ftpmirror.gnu.org/binutils/binutils-$(version).tar.xz")
+    set_urls("https://ftpmirror.gnu.org/binutils/binutils-$(version).tar.xz",
+             "https://ftp.gnu.org/gnu/binutils/binutils-$(version).tar.xz")
+    add_versions("2.45", "c50c0e7f9cb188980e2cc97e4537626b1672441815587f1eab69d2a1bfbef5d2")
+    add_versions("2.41", "ae9a5789e23459e59606e6714723f2d3ffc31c03174191ef0d015bdf06007450")
     add_versions("2.38", "e316477a914f567eccc34d5d29785b8b0f5a10208d36bbacedcc39048ecfe024")
     add_versions("2.34", "f00b0e8803dc9bab1e2165bd568528135be734df3fabf8d0161828cd56028952")
-    
+
     if is_plat("mingw") and is_subhost("msys") then
         add_extsources("pacman::binutils")
     elseif is_plat("linux") then
@@ -17,6 +19,33 @@ package("binutils")
     elseif is_plat("macosx") then
         add_extsources("brew::binutils")
     end
+
+    on_fetch("@linux", "@macosx", "@msys", function (package, opt)
+        if opt.system then
+            if package:is_binary() then
+                local tools = {"ld", "ranlib", "objcopy"}
+                for _, tool in ipairs(tools) do
+                    if not package:find_tool(tool) then
+                        return
+                    end
+                end
+                return {}
+            elseif package:is_library() then
+                local libs = {"bfd", "ctf", "opcodes"}
+                local result
+                for _, lib in ipairs(libs) do
+                    local libinfo = package:find_package("system::" .. lib)
+                    if libinfo then
+                        result = result or {links = {}}
+                        table.insert(result.links, libinfo.links)
+                    end
+                end
+                return result
+            end
+        end
+    end)
+
+    add_deps("bison")
 
     on_install("@linux", "@macosx", "@msys", function (package)
         local configs = {"--disable-debug",
@@ -42,6 +71,10 @@ package("binutils")
             io.replace("binutils/srconv.c", "char *program_name;", "extern char *program_name;", {plain = true})
             io.replace("binutils/sysdump.c", "char *program_name;", "extern char *program_name;", {plain = true})
             io.replace("binutils/coffdump.c", "char * program_name;", "extern char *program_name;", {plain = true})
+        end
+        -- fix fdopen conflicts
+        if package:is_plat("macosx") then
+            io.replace("zlib/zutil.h", "ifndef fdopen", "if !defined(fdopen) && (__DARWIN_C_LEVEL < 198808L)", {plain = true})
         end
         import("package.tools.autoconf").install(package, configs)
     end)

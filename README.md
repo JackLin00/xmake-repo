@@ -1,22 +1,22 @@
 <div align="center">
   <a href="https://xmake.io">
-    <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
+    <img width="160" height="160" src="https://xmake.io/assets/img/logo.png">
   </a>
 
   <h1>xmake-repo</h1>
 
   <div>
     <a href="https://github.com/xmake-io/xmake-repo/actions?query=workflow%3AWindows">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake-repo/Windows/dev.svg?style=flat-square&logo=windows" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xmake-repo/windows.yml?branch=dev&style=flat-square&logo=windows" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xmake-repo/actions?query=workflow%3ALinux">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake-repo/Linux/dev.svg?style=flat-square&logo=linux" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xmake-repo/ubuntu.yml?branch=dev&style=flat-square&logo=linux" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xmake-repo/actions?query=workflow%3AmacOS">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake-repo/macOS/dev.svg?style=flat-square&logo=apple" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xmake-repo/macos.yml?branch=dev&style=flat-square&logo=apple" alt="github-ci" />
     </a>
     <a href="https://github.com/xmake-io/xmake-repo/actions?query=workflow%3AAndroid">
-      <img src="https://img.shields.io/github/workflow/status/xmake-io/xmake-repo/Android/dev.svg?style=flat-square&logo=android" alt="github-ci" />
+      <img src="https://img.shields.io/github/actions/workflow/status/xmake-io/xmake-repo/android.yml?branch=dev&style=flat-square&logo=android" alt="github-ci" />
     </a>
   </div>
   <div>
@@ -91,7 +91,7 @@ Write a xmake.lua of new package in `packages/x/xxx/xmake.lua` and push a pull-r
 
 For example, [packages/z/zlib/xmake.lua](https://github.com/xmake-io/xmake-repo/blob/dev/packages/z/zlib/xmake.lua):
 
-If you want to known more, please see: [Create and Submit packages to the official repository](https://xmake.io/#/package/remote_package?id=submit-packages-to-the-official-repository)
+If you want to know more, please see: [Create and Submit packages to the official repository](https://xmake.io/guide/package-management/package-distribution.html#submit-package-to-the-official-repository)
 
 ## Create a package template from Github
 
@@ -126,4 +126,13 @@ package("libpng")
         assert(package:has_cfuncs("foo", {includes = "foo.h"}))
     end)
 packages/l/libpng/xmake.lua generated!
+```
+
+### Test a package in local
+
+```console
+$ xmake l scripts/test.lua --shallow -vD zlib
+$ xmake l scripts/test.lua --shallow -vD -p iphoneos zlib
+$ xmake l scripts/test.lua --shallow -vD -k shared -m debug zlib
+$ xmake l scripts/test.lua --shallow -vD --runtimes=MD zlib
 ```

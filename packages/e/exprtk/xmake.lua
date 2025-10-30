@@ -6,14 +6,17 @@ package("exprtk")
     set_license("MIT")
 
     add_urls("https://github.com/ArashPartow/exprtk.git")
-    add_versions("2021.06.06", "93a9f44f99b910bfe07cd1e933371e83cea3841c")
+    add_versions("0.0.1", "806c519c91fd08ba4fa19380dbf3f6e42de9e2d1")
+    add_versions("0.0.2", "f46bffcd6966d38a09023fb37ba9335214c9b959")
+    add_versions("0.0.3", "a4b17d543f072d2e3ba564e4bc5c3a0d2b05c338")
 
     if is_plat("windows") then
         add_cxxflags("/bigobj")
     elseif is_plat("mingw") then
         add_cxxflags("-Wa,-mbig-obj")
     end
-    on_install(function (package)
+    
+    on_install("windows", "linux", "macosx", "bsd", "iphoneos", "android", "wasm", "cross", function (package)
         os.cp("exprtk.hpp", package:installdir("include"))
     end)
 

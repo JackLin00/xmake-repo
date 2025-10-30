@@ -19,6 +19,10 @@ target("bz2")
         set_filename("libbz2.dll")
         add_files("libbz2.def")
     end
+    if is_plat("wasm") then
+        add_defines("BZ_STRICT_ANSI")
+    end
+    add_cflags("clang::-Wno-error=int-conversion")
 
 if has_config("enable_tools") then
 
@@ -29,10 +33,15 @@ target("bzip2")
 
     after_install(function (target)
         -- copy/link additional executables/scripts (behavior is altered by checking the program name)
-        if target:is_plat("windows", "mingw") then
+        if target:is_plat("windows", "mingw", "msys", "cygwin") then
             local binarydir = path.join(target:installdir(), "bin")
             os.vcp(path.join(binarydir, "bzip2.exe"), path.join(binarydir, "bzcat.exe"))
             os.vcp(path.join(binarydir, "bzip2.exe"), path.join(binarydir, "bunzip2.exe"))
+        elseif is_subhost("windows") then
+            -- when cross-compiling (ex: android from windows), we need to copy the binaries too
+            local binarydir = path.join(target:installdir(), "bin")
+            os.vcp(path.join(binarydir, "bzip2"), path.join(binarydir, "bzcat"))
+            os.vcp(path.join(binarydir, "bzip2"), path.join(binarydir, "bunzip2"))
         else
             local binarydir = path.join(target:installdir(), "bin")
             os.ln(path.join(binarydir, "bzip2"), path.join(binarydir, "bzcat"))

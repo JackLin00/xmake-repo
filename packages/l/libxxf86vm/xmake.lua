@@ -3,8 +3,9 @@ package("libxxf86vm")
     set_homepage("https://www.x.org/")
     set_description("X.Org: XFree86-VidMode X extension")
 
-    set_urls("https://www.x.org/archive/individual/lib/libXxf86vm-$(version).tar.bz2")
-    add_versions("1.1.4", "afee27f93c5f31c0ad582852c0fb36d50e4de7cd585fcf655e278a633d85cd57")
+    set_urls("https://www.x.org/archive/individual/lib/libXxf86vm-$(version).tar.gz")
+    add_versions("1.1.5", "f3f1c29fef8accb0adbd854900c03c6c42f1804f2bc1e4f3ad7b2e1f3b878128")
+    add_versions("1.1.6", "d2b4b1ec4eb833efca9981f19ed1078a8a73eed0bb3ca5563b64527ae8021e52")
 
     if is_plat("linux") then
         add_extsources("apt::libxxf86vm-dev")

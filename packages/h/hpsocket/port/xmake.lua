@@ -39,9 +39,8 @@ option("unicode")
 option_end()
 
 option("hpversion")
-    set_default("v5.8.4")
+    set_default("v5.9.1")
     set_showmenu(true)
-    set_values("v5.7.3", "v5.8.4")
     set_category("option")
     set_description("The version of HP-Socket")
 option_end()
@@ -107,14 +106,25 @@ target("hpsocket")
         if     vs == "2015" then vs_ver = "14.0"
         elseif vs == "2017" then vs_ver = "15.0"
         elseif vs == "2019" then vs_ver = "16.0"
+        elseif vs == "2022" then vs_ver = "17.0"
+        end
+        if get_config("hpversion") >= "v5.9.1" then
+            vs_ver = (vs == "2015" and "100" or "14x")
+        end
+
+        local arch = "x64"
+        if is_arch("x64", "x86_64", "arm64.*") then
+            arch = "x64"
+        else
+            arch = "x86"
         end
 
         add_includedirs(".")
-        add_includedirs(path.join(winBuiltinDependentLibPath, "openssl", vs_ver, "$(arch)", "include"))
-        ssllinkdir = path.join(winBuiltinDependentLibPath, "openssl", vs_ver, "$(arch)", "lib")
+        add_includedirs(path.join(winBuiltinDependentLibPath, "openssl", vs_ver, arch, "include"))
+        ssllinkdir = path.join(winBuiltinDependentLibPath, "openssl", vs_ver, arch, "lib")
         add_linkdirs(ssllinkdir)
-        add_includedirs(path.join(winBuiltinDependentLibPath, "zlib", vs_ver, "$(arch)", "include"))
-        zliblinkdir = path.join(winBuiltinDependentLibPath, "zlib", vs_ver, "$(arch)", "lib")
+        add_includedirs(path.join(winBuiltinDependentLibPath, "zlib", vs_ver, arch, "include"))
+        zliblinkdir = path.join(winBuiltinDependentLibPath, "zlib", vs_ver, arch, "lib")
         add_linkdirs(zliblinkdir)
 
         if not has_config("no_ssl") then
@@ -151,7 +161,12 @@ target("hpsocket")
                 end
             end
         else
-            local arch = is_arch("x86_64") and "x64" or "x86"
+            local arch = is_arch("x64", "x86_64") and "x64" or "x86"
+            if is_arch("arm64.*") then
+                arch = "arm64"
+            elseif is_arch("arm.*") then
+                arch = "arm"
+            end
             add_includedirs(path.join("Linux/dependent", arch, "include"))
             linkdir = path.join("Linux/dependent", arch, "lib")
             add_linkdirs(linkdir)

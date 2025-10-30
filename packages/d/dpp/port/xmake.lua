@@ -1,17 +1,35 @@
 add_rules("mode.debug", "mode.release")
-
-add_requires("fmt", "nlohmann_json", "libsodium", "libopus", "openssl", "zlib")
+add_requires("fmt", "nlohmann_json", "openssl", "zlib")
+option("coro", {default = false})
+option("voice", {default = true})
+if has_config("voice") then
+    add_requires("libopus", "libsodium")
+end
 
 target("dpp")
     set_kind("$(kind)")
-    set_languages("c++17")
-    add_includedirs("include")
+    add_includedirs("include", "include/dpp")
     add_headerfiles("include/(dpp/**.h)")
     add_files("src/dpp/**.cpp")
-    add_packages("fmt", "nlohmann_json", "libsodium", "libopus", "openssl", "zlib")
+    add_packages("fmt", "nlohmann_json", "openssl", "zlib")
 
-    add_defines("DPP_BUILD")
-    add_defines("HAVE_VOICE")
+    if has_config("voice") then
+        add_packages("libopus", "libsodium")
+        add_defines("HAVE_VOICE")
+    end
+
+    if has_config("coro") then
+        add_defines("DPP_CORO")
+    end
+
+    local target_cpp_lang = "c++17"
+    if has_config("coro") then
+        target_cpp_lang = "c++20"
+    end
+
+    set_languages(target_cpp_lang)
+
+    add_defines("DPP_BUILD", "DPP_USE_EXTERNAL_JSON")
 
     if is_plat("windows", "mingw") then
         add_defines("WIN32", "_WINSOCK_DEPRECATED_NO_WARNINGS", "WIN32_LEAN_AND_MEAN")
