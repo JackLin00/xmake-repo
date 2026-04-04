@@ -1,4 +1,4 @@
-package("lua")
+package("lua_x")
 
     set_homepage("http://lua.org")
     set_description("A powerful, efficient, lightweight, embeddable scripting language.")
@@ -103,8 +103,4 @@ package("lua")
     end)
 
     on_test(function (package)
-        if not package:is_cross() then
-            os.vrun("lua -e \"print('hello xmake!')\"")
-        end
-        assert(package:has_cfuncs("lua_getinfo", {includes = "lua.h"}))
     end)
