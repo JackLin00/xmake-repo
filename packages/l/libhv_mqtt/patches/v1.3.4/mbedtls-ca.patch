@@ -1,0 +1,79 @@
+--- a/ssl/mbedtls.c
++++ b/ssl/mbedtls.c
+@@ -31,6 +31,7 @@
+     mbedtls_ctr_drbg_context    ctr_drbg;
+     mbedtls_ssl_config          conf;
+     mbedtls_x509_crt            cert;
++    mbedtls_x509_crt            cacert;
+     mbedtls_pk_context          pkey;
+ #if defined(MBEDTLS_SSL_CACHE_C)
+     mbedtls_ssl_cache_context   cache;
+@@ -46,6 +47,7 @@
+     mbedtls_ssl_cache_init(&ctx->cache);
+ #endif
+     mbedtls_x509_crt_init(&ctx->cert);
++    mbedtls_x509_crt_init(&ctx->cacert);
+     mbedtls_pk_init(&ctx->pkey);
+     mbedtls_entropy_init(&ctx->entropy);
+     mbedtls_ctr_drbg_init(&ctx->ctr_drbg);
+@@ -53,7 +55,28 @@
+     int mode = MBEDTLS_SSL_VERIFY_NONE;
+     int endpoint = MBEDTLS_SSL_IS_CLIENT;
+     bool check = false;
++    bool has_ca = false;
+     if (param) {
++        // Trust anchors for peer verification. A bundle may contain entries
++        // mbedtls cannot parse (positive return); fail only if none loaded.
++        if (param->ca_file && *param->ca_file) {
++            if (mbedtls_x509_crt_parse_file(&ctx->cacert, param->ca_file) < 0) {
++                fprintf(stderr, "ssl ca_file error!\n");
++                goto error;
++            }
++            has_ca = true;
++        }
++        if (param->ca_path && *param->ca_path) {
++            if (mbedtls_x509_crt_parse_path(&ctx->cacert, param->ca_path) < 0) {
++                fprintf(stderr, "ssl ca_path error!\n");
++                goto error;
++            }
++            has_ca = true;
++        }
++        if (has_ca && ctx->cacert.version == 0) {
++            fprintf(stderr, "ssl ca_file/ca_path contains no certificate!\n");
++            goto error;
++        }
+         if (param->crt_file && *param->crt_file) {
+             if (mbedtls_x509_crt_parse_file(&ctx->cert, param->crt_file) != 0) {
+                 fprintf(stderr, "ssl crt_file error!\n");
+@@ -73,6 +96,13 @@
+         }
+         if (param->verify_peer) {
+             mode = MBEDTLS_SSL_VERIFY_REQUIRED;
++            // A client cert file's extra certs (cert.next) were already
++            // used as CA chain upstream; keep that working.
++            if (param->endpoint == HSSL_CLIENT && !has_ca &&
++                !(check && ctx->cert.next)) {
++                fprintf(stderr, "ssl verify_peer requires ca_file or ca_path!\n");
++                goto error;
++            }
+         }
+         if (param->endpoint == HSSL_SERVER) {
+             endpoint = MBEDTLS_SSL_IS_SERVER;
+@@ -98,6 +128,9 @@
+             goto error;
+         }
+     }
++    if (has_ca) {
++        mbedtls_ssl_conf_ca_chain(&ctx->conf, &ctx->cacert, NULL);
++    }
+     return ctx;
+ error:
+     free(ctx);
+@@ -108,6 +141,7 @@
+     if (!ssl_ctx) return;
+     struct mbedtls_ctx *mctx = (struct mbedtls_ctx *)ssl_ctx;
+     mbedtls_x509_crt_free(&mctx->cert);
++    mbedtls_x509_crt_free(&mctx->cacert);
+     mbedtls_pk_free(&mctx->pkey);
+     mbedtls_ssl_config_free(&mctx->conf);
+ #if defined(MBEDTLS_SSL_CACHE_C)

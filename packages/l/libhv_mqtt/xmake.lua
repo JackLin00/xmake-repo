@@ -20,6 +20,11 @@ package("libhv_mqtt")
     add_versions("v1.3.3", "f78d1012ddf82506c28dda573ce303912e6cd5e707a358a249db1cc7e1e82238")
     add_versions("v1.3.4", "966866873897ff4a7c526c3f6f1d00d7c13027aa5eef16270a5c5b4094dbdf95")
 
+    -- mbedtls backend: honour hssl_ctx_opt_t.ca_file/ca_path (upstream ignores them,
+    -- so a verify_peer client can never validate a server). Inert unless ca_file,
+    -- ca_path or client verify_peer is set.
+    add_patches("v1.3.4", "patches/v1.3.4/mbedtls-ca.patch", "75bdfdc6b7a25ea2d90e55094abcaa72842ae4fbfb1343e3320091548a53ac11")
+
     add_configs("protocol",    {description = "compile protocol", default = false, type = "boolean"})
     add_configs("http",        {description = "compile http", default = true, type = "boolean"})
     add_configs("http_server", {description = "compile http/server", default = true, type = "boolean"})
