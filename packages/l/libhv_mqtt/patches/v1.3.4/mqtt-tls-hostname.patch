@@ -1,0 +1,15 @@
+--- a/mqtt/mqtt_client.c
++++ b/mqtt/mqtt_client.c
+@@ -509,6 +509,12 @@
+         if (cli->ssl_ctx) {
+             hio_set_ssl_ctx(io, cli->ssl_ctx);
+         }
++        // SNI + certificate name check against the broker host, on the first
++        // connect and on every reconnect (mqtt_client_reconnect comes through
++        // here). IP literals are left alone, as in HttpClient.
++        if (!is_ipaddr(cli->host)) {
++            hio_set_hostname(io, cli->host);
++        }
+         hio_enable_ssl(io);
+     }
+     cli->io = io;

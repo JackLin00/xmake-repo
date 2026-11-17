@@ -24,6 +24,11 @@ package("libhv_mqtt")
     -- so a verify_peer client can never validate a server). Inert unless ca_file,
     -- ca_path or client verify_peer is set.
     add_patches("v1.3.4", "patches/v1.3.4/mbedtls-ca.patch", "75bdfdc6b7a25ea2d90e55094abcaa72842ae4fbfb1343e3320091548a53ac11")
+    -- mqtt client: give TLS the broker host name (SNI + certificate name check)
+    -- on connect and on the built-in reconnect; upstream never does, so any
+    -- CA-signed certificate was accepted. Skipped for IP literals, as HttpClient
+    -- does. Inert for non-TLS connections.
+    add_patches("v1.3.4", "patches/v1.3.4/mqtt-tls-hostname.patch", "72e3ca94f3c7231262a5ddb34f4cf4a683a52f3fe242984e2bfabcc6d0193ea8")
 
     add_configs("protocol",    {description = "compile protocol", default = false, type = "boolean"})
     add_configs("http",        {description = "compile http", default = true, type = "boolean"})
