@@ -1,0 +1,37 @@
+--- a/mqtt/mqtt_client.c
++++ b/mqtt/mqtt_client.c
+@@ -199,6 +199,12 @@
+ static void on_close(hio_t* io) {
+     mqtt_client_t* cli = (mqtt_client_t*)hevent_userdata(io);
+     cli->connected = 0;
++    // A connection that closes before CONNACK still has its connect timeout
++    // armed; left alone it fires during the next attempt and closes that one.
++    if (cli->timer) {
++        htimer_del(cli->timer);
++        cli->timer = NULL;
++    }
+     if (cli->cb) {
+         cli->head.type = MQTT_TYPE_DISCONNECT;
+         cli->cb(cli, cli->head.type);
+@@ -521,6 +527,11 @@
+     hevent_set_userdata(io, cli);
+     hio_setcb_connect(io, on_connect);
+     hio_setcb_close(io, on_close);
++    if (cli->timer) {
++        // pending reconnect or connect-timeout timer of an earlier attempt
++        htimer_del(cli->timer);
++        cli->timer = NULL;
++    }
+     if (cli->connect_timeout > 0) {
+         cli->timer = htimer_add(cli->loop, connect_timeout_cb, cli->connect_timeout, 1);
+         hevent_set_userdata(cli->timer, cli);
+--- a/ssl/mbedtls.c
++++ b/ssl/mbedtls.c
+@@ -181,6 +181,7 @@
+ void hssl_free(hssl_t ssl) {
+     if (ssl) {
+         mbedtls_ssl_free(ssl);
++        free(ssl);  // allocated in hssl_new
+         ssl = NULL;
+     }
+ }

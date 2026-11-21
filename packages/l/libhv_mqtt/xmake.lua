@@ -29,6 +29,11 @@ package("libhv_mqtt")
     -- CA-signed certificate was accepted. Skipped for IP literals, as HttpClient
     -- does. Inert for non-TLS connections.
     add_patches("v1.3.4", "patches/v1.3.4/mqtt-tls-hostname.patch", "72e3ca94f3c7231262a5ddb34f4cf4a683a52f3fe242984e2bfabcc6d0193ea8")
+    -- mqtt client: delete the connect-timeout/reconnect timer before each connect
+    -- and when a connection closes before CONNACK, so a stale timer cannot fire
+    -- in (and close) the next attempt; mbedtls backend: hssl_free also frees
+    -- the mbedtls_ssl_context that hssl_new allocated (leaked per connection).
+    add_patches("v1.3.4", "patches/v1.3.4/mqtt-reconnect-timer-and-ssl-leak.patch", "d63d23af695e42bc28e2a4012bfb76dba55ea217bc2043765643cf54d4b2663d")
 
     add_configs("protocol",    {description = "compile protocol", default = false, type = "boolean"})
     add_configs("http",        {description = "compile http", default = true, type = "boolean"})
